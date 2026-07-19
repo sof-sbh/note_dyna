@@ -1,0 +1,12 @@
+fetch dt.davis.problems
+| filter not(dt.davis.is_duplicate)
+| filter event.status == "ACTIVE"
+| expand entity_id = affected_entity_ids
+| filter startsWith(toString(entity_id), "HOST-")
+| fields
+    `Début` = event.start,
+    `ID` = display_id,
+    `Problème` = event.name,
+    `Impact` = dt.davis.impact_level,
+    `Host ID` = entity_id
+| sort `Début` desc
