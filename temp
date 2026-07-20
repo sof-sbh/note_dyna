@@ -9,13 +9,15 @@ fetch dt.davis.problems
     `Problème` = event.name,
     `Impact` = dt.davis.impact_level,
     `Host ID` = entity_id
-| sort `Début` desc
+| sort `Début` 
 
-timeseries Availability = avg(dt.host.availability, scalar: true),
-  by: {dt.entity.host}
-| filter Availability < 1
-| fieldsAdd Host = entityName(dt.entity.host)
-| fieldsAdd AvailabilityPercent = Availability * 100
-| sort AvailabilityPercent asc
-| fields Host, AvailabilityPercent
+fetch dt.entity.host
+| fieldsAdd host_group_id = belongs_to[dt.entity.host_group]
+| expand host_group_id
+| fieldsAdd host_group = entityName(host_group_id)
+| summarize hosts = count(), by:{host_group}
+| sort hosts desc
+
+
+
 
