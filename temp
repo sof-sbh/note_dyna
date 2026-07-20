@@ -10,3 +10,12 @@ fetch dt.davis.problems
     `Impact` = dt.davis.impact_level,
     `Host ID` = entity_id
 | sort `Début` desc
+
+timeseries Availability = avg(dt.host.availability, scalar: true),
+  by: {dt.entity.host}
+| filter Availability < 1
+| fieldsAdd Host = entityName(dt.entity.host)
+| fieldsAdd AvailabilityPercent = Availability * 100
+| sort AvailabilityPercent asc
+| fields Host, AvailabilityPercent
+
