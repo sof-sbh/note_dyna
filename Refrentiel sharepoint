@@ -1,1 +1,99 @@
 
+Dynatrace
+│
+├── 01_Architecture
+│   ├── Référentiel officiel
+│   ├── Schémas
+│   ├── ADR
+│   └── Roadmap
+│
+├── 02_Gouvernance
+│   ├── IAM
+│   ├── Policies
+│   ├── Management Zones
+│   ├── Tagging
+│   ├── Naming Convention
+│   ├── RBAC
+│   └── RACI
+│
+├── 03_Déploiement
+│   ├── OneAgent
+│   ├── ActiveGate
+│   ├── Extensions
+│   ├── Log Monitoring
+│   └── OpenTelemetry
+│
+├── 04_Exploitation (Run)
+│   ├── Runbooks
+│   ├── Procédures
+│   ├── Astreinte
+│   ├── Incidents
+│   ├── Post-Mortem
+│   └── Known Issues
+│
+├── 05_Dashboards
+│   ├── Infrastructure
+│   ├── Applications
+│   ├── Réseau
+│   ├── Logs
+│   ├── Business
+│   └── Exports
+│
+├── 06_DQL
+│   ├── Infrastructure
+│   ├── Logs
+│   ├── Services
+│   ├── Hosts
+│   ├── Kubernetes
+│   └── Bibliothèque de requêtes
+│
+├── 07_Alerting
+│   ├── Alert Profiles
+│   ├── Notifications
+│   ├── Workflows
+│   └── Maintenance Windows
+│
+├── 08_Reporting
+│   ├── KPI
+│   ├── SLA
+│   ├── SLO
+│   ├── Capacity Planning
+│   └── Rapports mensuels
+│
+├── 09_Applications
+│   ├── Fiches applicatives
+│   ├── Inventaire
+│   └── Owners
+│
+├── 10_Infrastructure
+│   ├── Hosts
+│   ├── VM
+│   ├── Databases
+│   ├── Network
+│   └── Cloud
+│
+├── 11_Sécurité
+│   ├── Audit
+│   ├── Logs sensibles
+│   ├── Compliance
+│   └── Accès
+│
+├── 12_FinOps
+│   ├── Licences
+│   ├── Consommation
+│   ├── Data Ingest
+│   └── Optimisations
+│
+├── 13_Projets
+│   ├── Nouvelles applications
+│   ├── Évolutions
+│   ├── Migration
+│   └── Comptes-rendus
+│
+├── 14_Formation
+│   ├── Guides
+│   ├── Tutoriels
+│   ├── Bonnes pratiques
+│   └── Présentations
+│
+└── 99_Archives
