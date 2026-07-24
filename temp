@@ -1,12 +1,10 @@
-fetch logs, from: toTimestamp("2026-07-23T12:00:00"), to: toTimestamp("2026-07-23T16:00:00")
-| filter dt.entity.service == "SERVICE-A90A6975507108A2"
-| filter loglevel == "ERROR"
-| summarize count(), by: {bin(timestamp, 5m), status_code}
-| sort timestamp asc 
 
 fetch logs, from: toTimestamp("2026-07-23T12:00:00"), to: toTimestamp("2026-07-23T16:00:00")
-| filter dt.entity.service == "SERVICE-A90A6975507108A2"
 | filter loglevel == "ERROR"
-| summarize count(), by: {content}
+| summarize count(), by: {dt.entity.service}
 | sort `count()` desc
-| limit 20
+
+fetch logs, from: toTimestamp("2026-07-23T12:00:00"), to: toTimestamp("2026-07-23T16:00:00")
+| filter loglevel == "ERROR"
+| summarize count(), by: {host.name}
+| sort `count()` desc
