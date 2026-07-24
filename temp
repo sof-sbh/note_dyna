@@ -1,6 +1,9 @@
 
-fetch 
-
+fetch spans
+| filter http.response.status_code == 403
+| fields timestamp, span.name, dt.entity.service, http.request.method, http.url
+| sort timestamp desc
+| limit 20
 
 
 
