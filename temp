@@ -1,3 +1,8 @@
+fetch events, from: toTimestamp("2026-07-23T12:00:00"), to: toTimestamp("2026-07-23T13:00:00")
+| filter in(dt.entity.host.name, {"siewbrpl05.ccas.asmeg.org","siewbrpl06.ccas.asmeg.org","siewbrpl07.ccas.asmeg.org"})
+| sort timestamp asc
+
+
 
 fetch logs, from: toTimestamp("2026-07-23T15:45:00"), to: toTimestamp("2026-07-23T16:15:00")
 | filter loglevel == "ERROR"
