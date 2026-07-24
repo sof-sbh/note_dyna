@@ -1,3 +1,11 @@
+
+fetch logs, from: toTimestamp("2026-07-23T11:30:00"), to: toTimestamp("2026-07-23T15:00:00")
+| filter contains(dt.entity.service, "resalys") or contains(host.name, "resalys")
+| filter loglevel == "ERROR"
+| summarize count(), by: {bin(timestamp, 5m)}
+| sort timestamp asc
+
+
 fetch logs
 | filter contains(dt.entity.service, "resalys") or contains(host.name, "resalys")
 | filter loglevel == "ERROR"
