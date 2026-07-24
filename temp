@@ -1,3 +1,8 @@
+fetch dt.entity.service, from: toTimestamp("2026-07-23T12:00:00"), to: toTimestamp("2026-07-23T15:00:00")
+| fields id, entity.name
+
+
+
 fetch logs, from: toTimestamp("2026-07-23T12:00:00"), to: toTimestamp("2026-07-23T16:00:00")
 | summarize count(), by: {dt.entity.service, service.name}
 | sort `count()` desc
