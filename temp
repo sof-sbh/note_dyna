@@ -10,6 +10,13 @@ fetch logs, from: toTimestamp("2026-07-23T14:00:00"), to: toTimestamp("2026-07-2
 | fields timestamp, content
 | limit 30
 
+fetch logs, from: toTimestamp("2026-07-23T14:02:00"), to: toTimestamp("2026-07-23T14:03:00")
+| filter in(host.name, {"siewbrpl05.ccas.asmeg.org","siewbrpl06.ccas.asmeg.org","siewbrpl07.ccas.asmeg.org"})
+| filter contains(content, "access forbidden") or contains(content, "ModSecurity") or contains(content, "rule id")
+| fields timestamp, content
+| limit 10
+
+
 
 
 
