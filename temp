@@ -1,6 +1,5 @@
-
 fetch logs, from: toTimestamp("2026-07-23T12:00:00"), to: toTimestamp("2026-07-23T16:00:00")
 | filter loglevel == "ERROR"
 | filter in(host.name, {"siewbrpl01.ccas.asmeg.org","siewbrpl02.ccas.asmeg.org","siewbrpl03.ccas.asmeg.org","siewbrpl04.ccas.asmeg.org","siewbrpl05.ccas.asmeg.org","siewbrpl06.ccas.asmeg.org","siewbrpl07.ccas.asmeg.org","siewbrpl08.ccas.asmeg.org","sietrrpl01.ccas.asmeg.org","sietrrpl02.ccas.asmeg.org","siepbrpl01.ccas.asmeg.org","siepbrpl02.ccas.asmeg.org"})
-| summarize count(), by: {interval: bin(timestamp, 5m), host.name}
-| sort interval asc
+| summarize count(), by: {bin(timestamp, 5m), host.name}
+| sort timestamp asc
