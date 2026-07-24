@@ -18,5 +18,19 @@ fetch logs, from: toTimestamp("2026-07-23T14:02:00"), to: toTimestamp("2026-07-2
 
 
 
+fetch logs, from: toTimestamp("2026-07-23T11:30:00"), to: toTimestamp("2026-07-23T12:00:00")
+| filter in(host.name, {"siewbrpl05.ccas.asmeg.org","siewbrpl06.ccas.asmeg.org","siewbrpl07.ccas.asmeg.org"})
+| filter contains(content, "traceparent")
+   or contains(content, "tracestate")
+   or contains(content, "x-dynatrace")
+   or contains(content, "baggage")
+| sort timestamp desc
+| limit 30
+
+
+
+
+
+
 
 
