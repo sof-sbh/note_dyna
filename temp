@@ -2,5 +2,6 @@
 fetch logs, from: toTimestamp("2026-07-23T15:45:00"), to: toTimestamp("2026-07-23T16:15:00")
 | filter loglevel == "ERROR"
 | filter in(host.name, {"siewbrpl05.ccas.asmeg.org","siewbrpl06.ccas.asmeg.org","siewbrpl07.ccas.asmeg.org"})
-| filter contains(content, "rollback") or contains(content, "connection")
+| filter contains(content, "access forbidden")
 | summarize count(), by: {bin(timestamp, 2m)}
+| sort `bin(timestamp, 2m)` asc
