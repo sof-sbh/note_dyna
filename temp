@@ -1,43 +1,12 @@
-fetch dt.entity.service, from: toTimestamp("2026-07-23T12:00:00"), to: toTimestamp("2026-07-23T15:00:00")
-| fields id, entity.name
-
-
+fetch logs, from: toTimestamp("2026-07-23T12:00:00"), to: toTimestamp("2026-07-23T16:00:00")
+| filter dt.entity.service == "SERVICE-A90A6975507108A2"
+| filter loglevel == "ERROR"
+| summarize count(), by: {bin(timestamp, 5m), status_code}
+| sort timestamp asc 
 
 fetch logs, from: toTimestamp("2026-07-23T12:00:00"), to: toTimestamp("2026-07-23T16:00:00")
-| summarize count(), by: {dt.entity.service, service.name}
+| filter dt.entity.service == "SERVICE-A90A6975507108A2"
+| filter loglevel == "ERROR"
+| summarize count(), by: {content}
 | sort `count()` desc
-
-fetch logs, from: toTimestamp("2026-07-23T11:30:00"), to: toTimestamp("2026-07-23T15:00:00")
-| filter contains(dt.entity.service, "resalys") or contains(host.name, "resalys")
-| filter loglevel == "ERROR"
-| summarize count(), by: {bin(timestamp, 5m)}
-| sort timestamp asc
-
-
-fetch logs
-| filter contains(dt.entity.service, "resalys") or contains(host.name, "resalys")
-| filter loglevel == "ERROR"
-| filter timestamp >= toTimestamp("2026-07-23T11:30:00") and timestamp <= toTimestamp("2026-07-23T15:00:00")
-| summarize count(), by: {bin(timestamp, 5m)}
-| sort timestamp asc
-
-## Contexte
-
-**Application** : Resalys
-**Environnement** : _à préciser (prod / préprod)_
-**Client** : CCAS – DSI Production MCO Applicatif
-
-**Résumé de l'incident**
-Suite à un déploiement **fullstack** sur Resalys, un redémarrage de l'application a été effectué. L'application a d'abord semblé répondre normalement, puis a produit un volume important d'erreurs aux alentours de **16h00**. Un retour en configuration **infra only** a résolu le problème.
-
-**Chronologie synthétique**
-- Déploiement fullstack sur Resalys
-- Redémarrage de l'application
-- Comportement nominal observé initialement
-- ~16h00 : apparition massive d'erreurs
-- Retour en infra only → résolution
-
-**Périmètre d'investigation**
-- Corréler les erreurs applicatives avec l'horodatage du déploiement/redémarrage
-- Identifier la cause racine côté couche applicative (fullstack) plutôt qu'infra
-- Vérifier reproductibilité / facteur déclenchant à 16h (charge, tâche planifiée, etc.)
+| limit 20
