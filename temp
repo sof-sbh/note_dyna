@@ -1,3 +1,6 @@
+fetch logs, from: toTimestamp("2026-07-23T12:00:00"), to: toTimestamp("2026-07-23T16:00:00")
+| summarize count(), by: {dt.entity.service, service.name}
+| sort `count()` desc
 
 fetch logs, from: toTimestamp("2026-07-23T11:30:00"), to: toTimestamp("2026-07-23T15:00:00")
 | filter contains(dt.entity.service, "resalys") or contains(host.name, "resalys")
