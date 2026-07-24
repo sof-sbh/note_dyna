@@ -17,7 +17,10 @@ fetch spans, from: toTimestamp("2026-07-23T14:00:00"), to: toTimestamp("2026-07-
 | summarize count(), by: {dt.entity.service}
 | lookup [fetch dt.entity.service], sourceField: dt.entity.service, lookupField: id, fields: {entity.name}
 
-
+fetch spans, from: toTimestamp("2026-07-23T14:00:00"), to: toTimestamp("2026-07-23T16:15:00")
+| filter http.response.status_code == 403
+| fieldsAdd allFields = record(*)
+| limit 1
 
 
 
