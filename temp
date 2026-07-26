@@ -10,6 +10,15 @@ fetch logs, from: toTimestamp("2026-07-23T14:00:00"), to: toTimestamp("2026-07-2
     autre = countIf(not(contains(content, "access forbidden")) and not(contains(content, "rollback")) and not(contains(content, "connection has been closed")) and not(contains(content, "no_session")) and not(contains(content, "PGPID:NotConnected")) and not(contains(content, "Error when releasing variables")) and not(contains(content, "timeout"))),
     total = count()
 
-
+fetch logs, from: toTimestamp("2026-07-23T14:00:00"), to: toTimestamp("2026-07-23T16:41:00")
+| filter host.name == "siewbrpl05.ccas.asmeg.org"
+| filter loglevel == "ERROR"
+| fieldsAdd category = if(contains(content, "access forbidden"), "access forbidden by rule",
+                       else: if(contains(content, "Error when releasing variables"), "releasing variables (UndeclaredThrowableException)",
+                       else: if(contains(content, "rollback") or contains(content, "connection has been closed") or contains(content, "no_session") or contains(content, "PGPID:NotConnected"), "db connection closed",
+                       else: if(contains(content, "timeout"), "timeout",
+                       else: "autre"))))
+| summarize count(), by: {category}
+| sort `count()` desc
 
 
