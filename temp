@@ -1,4 +1,16 @@
-
+fetch logs, from: toTimestamp("2026-07-23T14:00:00"), to: toTimestamp("2026-07-23T16:41:00")
+| filter host.name == "siewbrpl05.ccas.asmeg.org"
+| filter loglevel == "ERROR"
+| filter not(contains(content, "access forbidden"))
+   and not(contains(content, "Error when releasing variables"))
+   and not(contains(content, "rollback"))
+   and not(contains(content, "connection has been closed"))
+   and not(contains(content, "no_session"))
+   and not(contains(content, "PGPID:NotConnected"))
+| parse content, "ERROR:LD:exception_full"
+| summarize count(), by: {exception_full}
+| sort `count()` desc
+| limit 20
 fetch logs, from: toTimestamp("2026-07-23T14:00:00"), to: toTimestamp("2026-07-23T16:41:00")
 | filter host.name == "siewbrpl05.ccas.asmeg.org"
 | filter loglevel == "ERROR"
