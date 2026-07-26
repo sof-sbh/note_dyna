@@ -1,51 +1,7 @@
 
 fetch spans
-| filter http.response.status_code == 403
-| fields timestamp, span.name, dt.entity.service, http.request.method, http.url
-| sort timestamp desc
-| limit 20
 
 
-fetch spans, from: toTimestamp("2026-07-23T14:00:00"), to: toTimestamp("2026-07-23T16:15:00")
-| filter http.response.status_code == 403
-| fieldsAdd allFields = record(*)
-| limit 1
-
-
-fetch spans, from: toTimestamp("2026-07-23T14:00:00"), to: toTimestamp("2026-07-23T16:15:00")
-| filter http.response.status_code == 403
-| summarize count(), by: {dt.entity.service}
-| lookup [fetch dt.entity.service], sourceField: dt.entity.service, lookupField: id, fields: {entity.name}
-
-fetch spans, from: toTimestamp("2026-07-23T14:00:00"), to: toTimestamp("2026-07-23T16:15:00")
-| filter http.response.status_code == 403
-| fieldsAdd allFields = record(*)
-| limit 1
-
-fetch spans, from: toTimestamp("2026-07-23T14:00:00"), to: toTimestamp("2026-07-23T16:15:00")
-| filter http.response.status_code == 403
-| fields url.path, endpoint.name, dt.entity.service
-| summarize count(), by: {url.path, endpoint.name}
-| sort `count()` desc
-| limit 15
-
-xxxxx
-fetch logs, from: toTimestamp("2026-07-23T14:00:00"), to: toTimestamp("2026-07-23T16:41:00")
-| filter host.name == "siewbrpl05.ccas.asmeg.org"
-| filter loglevel == "ERROR"
-| summarize count(), by: {content}
-| sort `count()` desc
-| limit 30
-
-fetch logs, from: toTimestamp("2026-07-23T14:00:00"), to: toTimestamp("2026-07-23T16:41:00")
-| filter host.name == "siewbrpl05.ccas.asmeg.org"
-| filter loglevel == "ERROR"
-| fieldsAdd pattern = if(contains(content, "access forbidden"), "access forbidden by rule",
-                       if(contains(content, "rollback"), "rollback/connection closed",
-                       if(contains(content, "timeout"), "timeout",
-                       "autre")))
-| summarize count(), by: {pattern}
-| sort `count()` desc
 
 
 
