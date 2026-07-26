@@ -1,22 +1,6 @@
 
 fetch logs, from: toTimestamp("2026-07-23T14:00:00"), to: toTimestamp("2026-07-23T16:41:00")
-| filter host.name == "siewbrpl05.ccas.asmeg.org"
-| filter loglevel == "ERROR"
-| filter contains(content, "lecture seule") or contains(content, "read-only") or contains(content, "nextval")
-| summarize count(), by: {bin(timestamp, 5m)}
-| sort `bin(timestamp, 5m)` asc
-fetch logs, from: toTimestamp("2026-07-23T14:00:00"), to: toTimestamp("2026-07-23T16:41:00")
-| filter host.name == "siewbrpl05.ccas.asmeg.org"
-| filter loglevel == "ERROR"
-| filter not(contains(content, "access forbidden"))
-   and not(contains(content, "Error when releasing variables"))
-   and not(contains(content, "rollback"))
-   and not(contains(content, "connection has been closed"))
-   and not(contains(content, "no_session"))
-   and not(contains(content, "PGPID:NotConnected"))
-| summarize count(), by: {content}
-| sort `count()` desc
-| limit 30
+
 
 
 
