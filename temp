@@ -1,12 +1,13 @@
+
 fetch logs, from: toTimestamp("2026-07-23T14:00:00"), to: toTimestamp("2026-07-23T16:41:00")
 | filter host.name == "siewbrpl05.ccas.asmeg.org"
 | filter loglevel == "ERROR"
-| filter not(contains(content, "access forbidden")) and not(contains(content, "rollback"))
-| summarize count(), by: {content}
+| fieldsAdd pattern = if(contains(content, "access forbidden"), "access forbidden by rule",
+                      else: if(contains(content, "rollback") or contains(content, "connection has been closed") or contains(content, "no_session") or contains(content, "PGPID:NotConnected"), "db connection closed",
+                      else: if(contains(content, "timeout"), "timeout",
+                      else: "autre"))))
+| summarize count(), by: {pattern}
 | sort `count()` desc
-| limit 20
-fetch spans
-
 
 
 
