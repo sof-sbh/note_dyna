@@ -1,4 +1,10 @@
-
+fetch logs, from: toTimestamp("2026-07-23T14:00:00"), to: toTimestamp("2026-07-23T16:41:00")
+| filter host.name == "siewbrpl05.ccas.asmeg.org"
+| filter loglevel == "ERROR"
+| filter not(contains(content, "access forbidden")) and not(contains(content, "rollback"))
+| summarize count(), by: {content}
+| sort `count()` desc
+| limit 20
 fetch spans
 
 
