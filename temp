@@ -10,7 +10,30 @@ fetch logs, from: toTimestamp("2026-07-23T14:00:00"), to: toTimestamp("2026-07-2
 | limit 20
 fetch logs, from: toTimestamp("2026-07-23T14:00:00"), to: toTimestamp("2026-07-23T16:41:00")
 
+## Fichier à investiguer
 
+/etc/nginx/nginx.conf
+/etc/nginx/conf.d/*.conf
+/etc/nginx/sites-enabled/resalysneo-frontX.conf
+/var/log/nginx/error.log
+
+Chercher : deny, allow, limit_req, limit_conn, satisfy, return 403
+
+## Option 1 — Désactiver l'injection RUM
+- Où : Dynatrace → Settings → Web and mobile monitoring → Injection
+- Action : désactiver l'injection JS sur Resalys, ou exclure les assets statiques
+- Garde le monitoring fullstack, retire juste la réécriture HTML
+
+## Option 2 — Whitelister le trafic OneAgent côté Nginx
+- Identifier la règle exacte via error.log (ID de règle)
+- Ajouter une exception ciblée (IP source ou pattern OneAgent)
+- Nécessite validation admin Nginx
+
+## Plan
+1. Pilote sur 1 frontal (siewbrpl05), hors heures de pointe
+2. Appliquer Option 1 en premier
+3. Observer 30-60 min → si OK, généraliser
+4. Si problème persiste → combiner avec Option 2
 
 
 
