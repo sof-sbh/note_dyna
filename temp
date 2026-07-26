@@ -1,4 +1,13 @@
-
+fetch logs, from: toTimestamp("2026-07-23T14:00:00"), to: toTimestamp("2026-07-23T16:41:00")
+| filter host.name == "siewbrpl05.ccas.asmeg.org"
+| filter loglevel == "ERROR"
+| filter not(contains(content, "access forbidden"))
+| fieldsAdd exception_line = if(contains(content, "ERROR:"), substring(content, indexOf(content, "ERROR:")),
+                             else: if(contains(content, "ERREUR:"), substring(content, indexOf(content, "ERREUR:")),
+                             else: "no_exception_marker"))
+| summarize count(), by: {exception_line}
+| sort `count()` desc
+| limit 20
 fetch logs, from: toTimestamp("2026-07-23T14:00:00"), to: toTimestamp("2026-07-23T16:41:00")
 
 
