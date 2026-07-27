@@ -36,4 +36,9 @@ Chercher : deny, allow, limit_req, limit_conn, satisfy, return 403
 4. Si problème persiste → combiner avec Option 2
 
 
-
+fetch logs, from: toTimestamp("2026-07-23T15:45:00"), to: toTimestamp("2026-07-23T16:16:30")
+| filter loglevel == "ERROR"
+| filter in(host.name, {"siewbrpl05.ccas.asmeg.org","siewbrpl06.ccas.asmeg.org","siewbrpl07.ccas.asmeg.org"})
+| filter contains(content, "access forbidden")
+| summarize count(), by: {timeslot = bin(timestamp, 2m), host.name}
+| sort timeslot asc
