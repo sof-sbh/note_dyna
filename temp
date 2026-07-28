@@ -1,64 +1,41 @@
-fetch logs, from: toTimestamp("2026-07-23T14:00:00"), to: toTimestamp("2026-07-23T16:41:00")
-| filter host.name == "siewbrpl05.ccas.asmeg.org"
-| filter loglevel == "ERROR"
-| filter not(contains(content, "access forbidden"))
-| fieldsAdd exception_line = if(contains(content, "ERROR:"), substring(content, indexOf(content, "ERROR:")),
-                             else: if(contains(content, "ERREUR:"), substring(content, indexOf(content, "ERREUR:")),
-                             else: "no_exception_marker"))
-| summarize count(), by: {exception_line}
-| sort `count()` desc
-| limit 20
-fetch logs, from: toTimestamp("2026-07-23T14:00:00"), to: toTimestamp("2026-07-23T16:41:00")
-
-## Fichier à investiguer
-
-/etc/nginx/nginx.conf
-/etc/nginx/conf.d/*.conf
-/etc/nginx/sites-enabled/resalysneo-frontX.conf
-/var/log/nginx/error.log
-
-Chercher : deny, allow, limit_req, limit_conn, satisfy, return 403
-
-## Option 1 — Désactiver l'injection RUM
-- Où : Dynatrace → Settings → Web and mobile monitoring → Injection
-- Action : désactiver l'injection JS sur Resalys, ou exclure les assets statiques
-- Garde le monitoring fullstack, retire juste la réécriture HTML
-
-## Option 2 — Whitelister le trafic OneAgent côté Nginx
-- Identifier la règle exacte via error.log (ID de règle)
-- Ajouter une exception ciblée (IP source ou pattern OneAgent)
-- Nécessite validation admin Nginx
-
-## Plan
-1. Pilote sur 1 frontal (siewbrpl05), hors heures de pointe
-2. Appliquer Option 1 en premier
-3. Observer 30-60 min → si OK, généraliser
-4. Si problème persiste → combiner avec Option 2
-
-
-fetch logs, from: toTimestamp("2026-07-23T15:45:00"), to: toTimestamp("2026-07-23T16:16:30")
-| filter loglevel == "ERROR"
-| filter in(host.name, {"siewbrpl05.ccas.asmeg.org","siewbrpl06.ccas.asmeg.org","siewbrpl07.ccas.asmeg.org"})
-| filter contains(content, "access forbidden")
-| summarize count(), by: {timeslot = bin(timestamp, 2m), host.name}
-| sort timeslot asc
-
-fetch logs, from: toTimestamp("2026-07-23T14:00:00"), to: toTimestamp("2026-07-23T16:41:00")
-| filter host.name == "siewbrpl05.ccas.asmeg.org"
-| filter loglevel == "ERROR"
-
-
-
-
-fetch logs, from: toTimestamp("2026-07-23T14:00:00"), to: toTimestamp("2026-07-23T16:41:00")
-| filter host.name == "siewbrpl05.ccas.asmeg.org"
-| filter loglevel == "ERROR"
-| fieldsAdd type = if(contains(content, "access forbidden"), "nginx_access_forbidden",
-                   else: if(contains(content, "PGPID") or contains(content, "DatabaseErrorManager") or contains(content, "UndeclaredThrowableException"), "tomcat_db_error",
-                   else: "autre"))
-| filter type != "autre"
-| summarize count(), by: {bin(timestamp, 5m), type}
-| sort `bin(timestamp, 5m)` asc
-| filter contains(content, "PGPID") or contains(content, "DatabaseErrorManager") or contains(content, "UndeclaredThrowableException")
-| summarize count(), by: {bin(timestamp, 5m)}
-| sort `bin(timestamp, 5m)` asc
+Ok, on repart du device (la VM) et de ce qu'il faut pour la rendre observable via un script d'installation OneAgent. Voici les prérequis concrets, dans l'ordre :
+1. Prérequis système sur la VM
+OS supporté vérifié dans la matrice de compatibilité Dynatrace (version Linux/Windows précise)
+Droits root (Linux) ou admin local (Windows) pour l'exécution du script
+Espace disque suffisant (~500 Mo à 1 Go selon version)
+Connectivité réseau sortante en HTTPS (443) vers l'environnement Dynatrace SaaS ou vers l'ActiveGate désigné
+Résolution DNS fonctionnelle vers l'endpoint cible
+2. Éléments à récupérer avant de scripter
+URL de l'environnement Dynatrace (https://<votre-tenant>.live.dynatrace.com ou URL ActiveGate interne)
+PaaS token (droits "Install/Update PaaS integration" — pas un token API classique) pour télécharger l'installeur
+Nom du host-group cible (convention à respecter, ex. siewbrpl01-08 dans votre cas)
+Tags à injecter pour mapping automatique vers la bonne Management Zone
+3. Script d'installation (exemple structure Linux)
+Bash
+4. Décision à prendre avant l'exécution
+infra-only vs full-stack : full-stack injecte dans les process (Nginx/Tomcat) → active RUM/tracing mais peut créer des conflits (cf. votre cas récent avec une règle Nginx)
+Si la VM héberge un process sensible (reverse proxy, WAF), évaluer d'abord si l'injection process-level est souhaitée ou s'il faut rester en infra-only + logs
+5. Validation post-script
+Vérifier dans Dynatrace que le host apparaît (fetch dt.entity.host) sous le bon host-group et la bonne MZ
+Vérifier que les logs remontent bien (niveau host, comme vous l'avez déjà constaté sur Resalys)
+Tu veux que je détaille la version Windows du script, ou qu'on ajoute la partie ActiveGate si cette VM n'a pas d'accès direct à internet ?
+Voici la partie sécurité à ajouter à ce script d'installation VM :
+6. Sécurité
+Gestion du token
+Le PaaS token ne doit jamais être en dur dans le script ni versionné dans Git
+Injection via variable d'environnement ou vault au moment de l'exécution, pas en argument visible dans l'historique bash (history) ou les logs de process
+Scope du token limité à "Install/Update PaaS integration" uniquement — pas de token multi-usage
+Intégrité du binaire
+Vérifier le checksum/signature de l'installeur téléchargé avant exécution, surtout si le wget pointe vers un flux non maîtrisé
+Idéalement, héberger l'installeur validé sur un mirroir interne plutôt que de le retélécharger à chaque run depuis internet
+Droits d'exécution
+Exécution via un compte de service dédié avec sudo scridé (pas un compte personnel ni un accès root permanent)
+Limiter les droits sudo au strict nécessaire pour l'installation OneAgent, pas un accès root complet
+Réseau
+Flux sortant HTTPS (443) documenté et restreint à l'endpoint Dynatrace précis (pas de règle "any" sortante)
+Si la VM est en zone sensible (héberge Nginx/reverse proxy), vérifier l'impact du mode full-stack sur les règles réseau/pare-feu applicatif existantes avant activation
+Traçabilité
+Logger la date, l'auteur (compte de service), et les paramètres exacts injectés (host-group, tags, mode) pour chaque exécution
+Permet l'audit a posteriori : rapprocher ce qui a été réellement déployé sur cette VM avec ce qui est déclaré en gouvernance
+Séparation des environnements
+Token et host-group différents si la même VM template sert à dev/preprod/prod — jamais de token unique réutilisé entre environnements
