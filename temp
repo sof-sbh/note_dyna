@@ -1,10 +1,1 @@
 
-fetch logs, from: toTimestamp("2026-07-23T14:00:00"), to: toTimestamp("2026-07-23T16:41:00")
-| filter host.name == "siewbrpl05.ccas.asmeg.org"
-| filter loglevel == "ERROR"
-| fieldsAdd type = if(contains(content, "access forbidden"), "nginx_access_forbidden",
-              else: if(contains(content, "PGPID") or contains(content, "DatabaseErrorManager") or contains(content, "UndeclaredThrowableException"), "tomcat_db_error",
-              else: "autre"))
-| filter type != "autre"
-| summarize count(), by: {bin(timestamp, 5m), type}
-| sort `bin(timestamp, 5m)` asc
