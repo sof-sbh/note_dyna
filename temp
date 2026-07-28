@@ -7,3 +7,15 @@ fetch logs, from: toTimestamp("2026-07-23T14:00:00"), to: toTimestamp("2026-07-2
 | filter type == "autre"
 | fields timestamp, content
 | sort timestamp asc
+
+fetch logs, from: toTimestamp("2026-07-23T14:00:00"), to: toTimestamp("2026-07-23T16:41:00")
+| filter in(host.name, {"siewbrpl05.ccas.asmeg.org", "siewbrpl06.ccas.asmeg.org", "siewbrpl07.ccas.asmeg.org"})
+| filter loglevel == "ERROR"
+| fieldsAdd type = if(contains(content, "access forbidden"), "nginx_access_forbidden",
+              else: if(contains(content, "UndeclaredThrowableException"), "UndeclaredThrowableException",
+              else: if(contains(content, "PGPID"), "PGPID",
+              else: if(contains(content, "No such file or directory"), "no_such_file_or_directory",
+              else: if(contains(content, "DatabaseErrorManager"), "DatabaseErrorManager",
+              else: "autre")))))
+| summarize example = takeFirst(content), first_seen = min(timestamp), count = count(), by: {type}
+| sort count desc
