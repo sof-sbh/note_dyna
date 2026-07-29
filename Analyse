@@ -1,0 +1,49 @@
+# Analyse Globale – Incident Resalys Fullstack (23/07/2026)
+
+## Résumé exécutif
+
+Le déploiement Dynatrace Fullstack sur Resalys (avec redémarrage des serveurs) a **déclenché une dégradation progressive puis critique du service**, principalement causée par un **rejet des requêtes par Nginx ("access forbidden")** et, dans une moindre mesure, par des **erreurs Tomcat de fichier introuvable liées à l'injection RUM (ruxitagentjs)**. Le retour en mode Infra Only a immédiatement résolu l'incident, ce qui confirme que la cause est bien liée à l'agent Fullstack (injection RUM / trafic OneAgent) et non à la MEP applicative elle-même.
+
+## Chronologie
+
+| Heure | Événement |
+|---|---|
+| ~12h00 | MEP Resalys |
+| ~12h50 | Déploiement Fullstack (redémarrage des serveurs) |
+| 12h50 – 14h00 | Comportement nominal observé |
+| ~14h00 | Premier décrochage d'erreurs sur siewbrpl05/06/07 |
+| 14h00 – 15h45 | Montée progressive des erreurs `nginx_access_forbidden` (~1K–1,4K/5min) |
+| ~15h45 – 16h45 | **Pic majeur** : ~700 erreurs/5min par host, jusqu'à ~2,2K erreurs nginx cumulées, apparition des erreurs Tomcat `no_such_file_or_directory` |
+| 16h40 | Retour en configuration Infra Only → **résolution immédiate** |
+
+> ⚠️ Le fait que la résolution soit instantanée dès le retour en Infra Only est le signal le plus fort : la cause racine est bien liée à l'activité du OneAgent Fullstack (injection RUM côté Nginx/Tomcat), pas à un problème applicatif indépendant.
+
+## Analyse par type d'erreur
+
+### 1. `nginx_access_forbidden` — cause dominante
+- Erreur majoritaire sur siewbrpl05/06/07, croissante dès 14h15 et culminant à **~2,2K occurrences** vers 16h00-16h15.
+- Exemples de logs : requêtes `POST /resalys/rb_bf12706cao...` sur `resalysneo-front7.ccas.fr`, rejetées par une règle Nginx (`access forbidden by rule`).
+- Hypothèse : une règle de sécurité Nginx bloque le trafic généré/modifié par l'injection RUM du OneAgent (script `ruxitagentjs`), provoquant un rejet en cascade.
+
+### 2. `no_such_file_or_directory` (Tomcat) — cause secondaire, corrélée
+- Apparaît plus tardivement (~15h45), monte à ~800-900 occurrences avant la résolution.
+- Logs explicites : `open() "/opt/resalys/www/resalys/ruxitagentjs_ICA15789NPRTUVXfqrux_..." failed (2: No such file or directory)`.
+- **Confirme la piste RUM** : Tomcat tente de servir un fichier JS d'injection généré par OneAgent qui n'existe pas/plus au bon endroit → échec applicatif en cascade derrière le blocage Nginx.
+
+### 3. Erreurs siewbrpl01 (PGPID, dump, port already in use)
+- Pattern en dents de scie **présent sur toute la journée**, y compris avant et après l'incident → bruit de fond préexistant, **non corrélé** au déploiement Fullstack.
+- Deux chutes nettes à ~12h10 et ~15h30-15h45 coïncident avec des redémarrages de service (déploiement puis probable action de remédiation intermédiaire avant le retour définitif en Infra Only à 16h40).
+- Erreurs fonctionnelles ("annulation dossier check-in/check-out", `NullPointerException`, `BindException: adresse déjà utilisée`) : à traiter séparément, hors périmètre de l'incident Fullstack.
+
+## Cause racine probable
+
+L'activation du Fullstack (agent + injection RUM) a introduit un comportement que la configuration Nginx actuelle ne tolère pas : le trafic ou les requêtes liées à l'agent OneAgent se font bloquer par une règle existante (`access forbidden by rule`), et le fichier d'injection RUM (`ruxitagentjs`) n'est pas correctement résolu côté Tomcat. L'effet s'amplifie avec la montée en charge de l'après-midi jusqu'au pic à 16h.
+
+## Pistes de correction avant réactivation du Fullstack
+
+Fichiers à investiguer sur les serveurs frontaux : `/etc/nginx/nginx.conf`, `/etc/nginx/conf.d/*.conf`
+
+- **Option 1 – Whitelister le trafic OneAgent côté Nginx** : ajouter une exception ciblée sur le pattern OneAgent/ruxitagentjs dans les règles de blocage.
+- **Option 2 – Désactiver l'injection RUM** : couper l'injection JS sur Resalys tout en gardant le monitoring Fullstack (infra + process), en retirant uniquement la réécriture RUM.
+
+**Plan recommandé** : piloter la correction sur un seul serveur frontal en environnement de Qualification avant généralisation en production, afin de valider qu'aucune régression `access forbidden` ou `no_such_file_or_directory` ne réapparaît.
